@@ -47,7 +47,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="RayTracer.cs" />
     <Compile Include="RenderTask.cs" />
+    <Compile Include="SceneOutput.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
