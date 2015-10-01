@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using System;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace csmacnz.Monocle
@@ -12,9 +13,12 @@ namespace csmacnz.Monocle
                 CameraPosition = new Vector3D(0, 0, -1000),
                 CameraFacingAt = new Vector3D(),
                 PixelsToUnits = 1,
-                DefaultColor = Colors.Firebrick
+                DefaultColor = Colors.Firebrick,
+                AmbientLight = new LightStrength(0.1, 0.1, 0.1)
             };
         }
+
+        public LightStrength AmbientLight { get; set; }
 
         public Vector3D CameraFacingAt { get; set; }
 
