@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using Point = System.Windows.Point;
 
 namespace csmacnz.Monocle
 {
@@ -187,20 +189,19 @@ namespace csmacnz.Monocle
                     {
                         foreach (var x in Enumerable.Range(0, horizontalSectionCount))
                         {
-                            taskQueue.Add(
-                                new RenderTask
-                                {
-                                    MinVerticalPixel = y * sectionHeight,
-                                    VerticalCount = sectionHeight,
-                                    MinHorizontalPixel = x * sectionWidth,
-                                    HorizontalCount = sectionWidth
-                                });
+                            var region = new Rectangle(
+                                x * sectionWidth,
+                                y *sectionHeight,
+                                sectionWidth,
+                                sectionHeight);
+
+                            taskQueue.Add(new RenderTask {Region = region});
                         }
                     }
                     taskQueue.AsParallel().Select(task =>
                     {
-                        RayTracer.RenderSection(task.MinVerticalPixel, task.VerticalCount, task.MinHorizontalPixel,
-                            task.HorizontalCount, output);
+
+                        RayTracer.RenderSection(task.Region, Scene.Default(), output);
 
                         return 0;
                     }).Aggregate((_, __) => 0);

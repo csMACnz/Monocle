@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -49,6 +50,7 @@
     </ApplicationDefinition>
     <Compile Include="RayTracer.cs" />
     <Compile Include="RenderTask.cs" />
+    <Compile Include="Scene.cs" />
     <Compile Include="SceneOutput.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
