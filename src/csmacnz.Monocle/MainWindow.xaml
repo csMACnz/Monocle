@@ -5,8 +5,53 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:csmacnz.Monocle"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Monocle" Height="350" Width="525">
+    <Window.Resources>
+        <local:CustomZoomValueConverter x:Key="ZoomValueConverter" />
+    </Window.Resources>
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <ScrollViewer
+            Name="ScrollViewer"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto"
+            MouseLeftButtonUp="OnMouseLeftButtonUp"
+            MouseMove="OnMouseMove"
+            PreviewMouseWheel="OnPreviewMouseWheel"
+            ScrollChanged="OnScrollViewerScrollChanged"
+            >
+            <Image
+                Name="Canvas"
+                Stretch="None"
+                SnapsToDevicePixels="True"
+                RenderOptions.BitmapScalingMode="NearestNeighbor"
+                RenderOptions.EdgeMode="Aliased"
+                MouseLeftButtonDown="OnMouseLeftButtonDown"
+                >
+                <Image.LayoutTransform>
+                    <ScaleTransform x:Name="ScaleTransform"/>
+                </Image.LayoutTransform>
+            </Image>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Label Content="{Binding ElementName=Slider, Path=Value, Converter={StaticResource ZoomValueConverter}, UpdateSourceTrigger=PropertyChanged}"/>
+            <Slider
+                Name="Slider"
+                Orientation="Horizontal"
+                Minimum="-1"
+                Maximum="9"
+                Value="0"
+                TickPlacement="BottomRight"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"
+                Width="150"
+                ValueChanged="OnSliderValueChanged"/>
+            <Button Name="renderButton" Click="OnRenderClick">Render</Button>
+            <Button Name="resetButton" Click="OnResetClick">Reset</Button>
+            <Button x:Name="saveButton" Click="OnSaveClick" Content="Save"/>
+        </StackPanel>
     </Grid>
 </Window>
