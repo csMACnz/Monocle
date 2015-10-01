@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace csmacnz.Monocle
@@ -147,44 +149,88 @@ namespace csmacnz.Monocle
             }
         }
 
-        private void OnRenderClick(object sender, RoutedEventArgs e)
+        private async void OnRenderClick(object sender, RoutedEventArgs e)
         {
             renderButton.IsEnabled = false;
 
-            Render();
+            await RenderAsync();
 
             resetButton.IsEnabled = true;
             saveButton.IsEnabled = true;
         }
 
-        private void Render()
+        private Task RenderAsync()
         {
             //int width = 640, height = 480;
             int width = 1024, height = 768;
+
             var pixelFormat = PixelFormats.Rgb24;
             var bitsPerPixel = pixelFormat.BitsPerPixel;
 
-            var rawStride = (width*bitsPerPixel + 7)/8;
-            var pixelData = new byte[rawStride*height];
+            var rawStride = (width * bitsPerPixel + 7) / 8;
+            var pixelData = new byte[rawStride * height];
 
-            var defaultColor = Colors.Firebrick;
-
-            foreach (var y in Enumerable.Range(0, height))
+            Action updateScreen = () =>
             {
-                foreach (var x in Enumerable.Range(0, width))
+                var bitmap = BitmapSource.Create(width, height,
+                    96, 96, pixelFormat, null, pixelData, rawStride);
+
+                Canvas.Source = bitmap;
+            };
+            var timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Tick += (s, e) => updateScreen();
+            timer.Start();
+
+            return Task.Factory.StartNew(
+                () =>
                 {
-                    int xIndex = x*3;
-                    int yIndex = y*rawStride;
-                    pixelData[xIndex + yIndex] = defaultColor.R;
-                    pixelData[xIndex + yIndex + 1] = defaultColor.G;
-                    pixelData[xIndex + yIndex + 2] = defaultColor.B;
-                }
-            }
+                    var horizontalSectionCount = 16;
+                    var verticalSectionCount = 16;
+                    var sectionWidth = width / horizontalSectionCount;
+                    var sectionHeight = height / verticalSectionCount;
+                    List<RenderTask> taskQueue = new List<RenderTask>();
 
-            var bitmap = BitmapSource.Create(width, height,
-                96, 96, pixelFormat, null, pixelData, rawStride);
+                    foreach (var y in Enumerable.Range(0, verticalSectionCount))
+                    {
+                        foreach (var x in Enumerable.Range(0, horizontalSectionCount))
+                        {
+                            taskQueue.Add(
+                                new RenderTask
+                                {
+                                    MinVerticalPixel = y * sectionHeight,
+                                    VerticalCount = sectionHeight,
+                                    MinHorizontalPixel = x * sectionWidth,
+                                    HorizontalCount = sectionWidth
+                                });
+                        }
+                    }
+                    taskQueue.AsParallel().Select(task =>
+                    {
+                        var defaultColor = Colors.Firebrick;
 
-            Canvas.Source = bitmap;
+                        foreach (var y in Enumerable.Range(task.MinVerticalPixel, task.VerticalCount))
+                        {
+                            foreach (var x in Enumerable.Range(task.MinHorizontalPixel, task.HorizontalCount))
+                            {
+                                //System.Threading.Thread.Sleep(0);
+                                System.Threading.Thread.Sleep(1);
+                                int xIndex = x * 3;
+                                int yIndex = y * rawStride;
+                                pixelData[xIndex + yIndex] = defaultColor.R;
+                                pixelData[xIndex + yIndex + 1] = defaultColor.G;
+                                pixelData[xIndex + yIndex + 2] = defaultColor.B;
+                            }
+                        }
+
+                        return 0;
+                    }).Aggregate((_, __) => 0);
+
+                }).ContinueWith(task =>
+                {
+                    timer.Stop();
+                    updateScreen();
+                }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void OnResetClick(object sender, RoutedEventArgs e)
