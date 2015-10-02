@@ -7,15 +7,10 @@ namespace csmacnz.Monocle
         public Light(Vector3D centerPoint)
         {
             CenterPoint = centerPoint;
-            Intensity = new LightStrength(1, 1, 1);
-            SpecularFactor = 1;
+            Color = new LightStrength(0.8, 0.8, 0.8);
         }
 
-        public LightStrength SpecularColor => Intensity*SpecularFactor;
-
-        public int SpecularFactor { get; set; }
-
-        public LightStrength Intensity { get; set; }
+        public LightStrength Color { get; set; }
 
         public Vector3D CenterPoint { get; set; }
     }

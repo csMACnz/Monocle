@@ -47,7 +47,8 @@ namespace csmacnz.Monocle
 
             var lights = new[]
             {
-                new Light(new Vector3D(-600, 0, 300)),
+                new Light(new Vector3D(0, 0, 300)),
+                new Light(new Vector3D(-500, 300, 300)),
                 new Light(new Vector3D(400, 400, 0)),
                 new Light(new Vector3D(-400, -400, 0))
             };
@@ -56,7 +57,7 @@ namespace csmacnz.Monocle
                 .Where(h=>h.Item2.HasValue)
                 .OrderBy(h=>h.Item2.Value)
                 .FirstOrDefault();
-            
+
             if (firstHit != null && firstHit.Item2.HasValue)
             {
                 var sphere = firstHit.Item1;
@@ -70,7 +71,7 @@ namespace csmacnz.Monocle
 
                 foreach (var light in lights)
                 {
-                    lighting += CalculateLighting(directionToEye, sphere, intersectionPoint, light);
+                    lighting += CalculateLighting(spheres, directionToEye, sphere, intersectionPoint, light);
                 }
                 return (lighting).Clamped().ToColor();
             }
@@ -78,26 +79,33 @@ namespace csmacnz.Monocle
             return scene.DefaultColor;
         }
 
-        private static LightStrength CalculateLighting(
-            Vector3D directionToEye,
-            Sphere sphere,
-            Vector3D intersectionPoint,
-            Light light)
+        private static LightStrength CalculateLighting(Sphere[] spheres, Vector3D directionToEye, Sphere sphere, Vector3D intersectionPoint, Light light)
         {
-            var surfaceNormal = sphere.NormalAt(intersectionPoint);
-
             var directionToLight = light.CenterPoint - intersectionPoint;
             directionToLight.Normalize();
+            var lightT = (light.CenterPoint.X - intersectionPoint.X)/directionToLight.X;
+            var blocked = spheres.Any(s => s != sphere && ObscuresLight(s, intersectionPoint, directionToLight, lightT));
+            if (blocked)
+            {
+                return LightStrength.Zero;
+            }
+
+            var surfaceNormal = sphere.NormalAt(intersectionPoint);
 
             var ldotn = Clamp01(Vector3D.DotProduct(directionToLight, surfaceNormal));
-            var diffuse = sphere.DiffuseColor*light.Intensity*ldotn;
+            var diffuse = sphere.DiffuseColor*light.Color*ldotn;
             var H = directionToLight + directionToEye;
             H.Normalize();
-            var ldoth = Clamp01(Vector3D.DotProduct(surfaceNormal, H));
-            var specular = sphere.MaterialSpecularIntensity*Math.Pow(ldoth, sphere.MaterialSpecularConstant)*
-                           light.SpecularColor;
+            var ndoth = Clamp01(Vector3D.DotProduct(surfaceNormal, H));
+            var specular = sphere.SpecularColor*Math.Pow(ndoth, sphere.Shinyness);
             var x = diffuse + specular;
-            return x;
+            return x.Clamped();
+        }
+
+        private static bool ObscuresLight(Sphere s, Vector3D intersectionPoint, Vector3D directionToLight, double lightT)
+        {
+            var test = s.Test(intersectionPoint, directionToLight);
+            return test.HasValue && test <= lightT;
         }
     }
 }

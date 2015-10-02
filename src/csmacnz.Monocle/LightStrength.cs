@@ -15,6 +15,7 @@ namespace csmacnz.Monocle
         public double R { get; set; }
         public double G { get; set; }
         public double B { get; set; }
+        public static LightStrength Zero => new LightStrength(0, 0, 0);
 
         public static LightStrength From(Color color)
         {
@@ -38,12 +39,12 @@ namespace csmacnz.Monocle
 
         public static LightStrength operator +(LightStrength first, LightStrength second)
         {
-            return new LightStrength(first.R+second.R, first.G + second.G, first.B + second.B);
+            return new LightStrength(first.R + second.R, first.G + second.G, first.B + second.B);
         }
 
         public static LightStrength operator *(LightStrength first, LightStrength second)
         {
-            return new LightStrength(first.R*second.R, first.G * second.G, first.B * second.B);
+            return new LightStrength(first.R*second.R, first.G*second.G, first.B*second.B);
         }
 
         public static LightStrength operator *(LightStrength first, double second)

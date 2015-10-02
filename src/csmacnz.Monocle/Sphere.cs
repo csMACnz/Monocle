@@ -8,18 +8,18 @@ namespace csmacnz.Monocle
     {
         public Vector3D CenterPoint { get; set; }
         public LightStrength DiffuseColor { get; set; }
-        public LightStrength MaterialSpecularIntensity { get; set; }
+        public LightStrength SpecularColor { get; set; }
 
-        public int MaterialSpecularConstant { get; set; }
+        public int Shinyness { get; set; }
         public double Radius { get; set; }
 
         public Sphere(Vector3D center, double radius)
         {
             CenterPoint = center;
             Radius = radius;
-            MaterialSpecularConstant = 500;
+            Shinyness = 100;
             DiffuseColor = LightStrength.From(Colors.DeepSkyBlue);
-            MaterialSpecularIntensity = new LightStrength(1, 1, 1);
+            SpecularColor = new LightStrength(0.7, 0.7, 0.7);
         }
 
         public Vector3D NormalAt(Vector3D intersectionPoint)
