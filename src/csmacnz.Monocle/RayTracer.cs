@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
-using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Color = System.Windows.Media.Color;
 using static csmacnz.Monocle.DoubleHelpers;
@@ -38,64 +37,48 @@ namespace csmacnz.Monocle
 
         private static Color RenderPoint(Scene scene, Vector3D renderPoint, Vector3D direction)
         {
-            Vector3D sphereCenter = new Vector3D(0, 0, 150);
-            var sphereDiffuseColor = LightStrength.From(Colors.DeepSkyBlue);
-            double sphereRadius = 150.0;
-            int sphereMaterialSpecularConstant = 500;
-            LightStrength sphereMaterialSpecularIntensity = new LightStrength(1, 1, 1);
+            var sphere = new Sphere(new Vector3D(0, 0, 300), 150);
 
-            Vector3D lightPosition = new Vector3D(50, 250, -100);
-            LightStrength lightIntensity = new LightStrength(1, 1, 1);
-            var lightSpecularFactor = 1;
-            LightStrength lightSpecularColor = lightIntensity*lightSpecularFactor;
+            var light = new Light(new Vector3D(400, 400, 0));
 
-            var lineToCircle = renderPoint - sphereCenter;
-            var B = 2*Vector3D.DotProduct(direction, lineToCircle);
-            var C = lineToCircle.LengthSquared - Math.Pow(sphereRadius, 2);
+            double? t = sphere.Test(renderPoint, direction);
 
-            var determinate = Math.Pow(B, 2) - 4*C;
-            if (determinate >= 0)
+            if (t.HasValue)
             {
-                var diff = Math.Sqrt(determinate);
-                var tintersect1 = (-B - diff)/2;
-                var tintersect2 = (-B + diff)/2;
+                var intersectionPoint = renderPoint + direction * t.Value;
 
-                if (tintersect1 > tintersect2)
-                {
-                    var temp = tintersect2;
-                    tintersect2 = tintersect1;
-                    tintersect1 = temp;
-                }
-                if (tintersect1 < 0)
-                {
-                    tintersect1 = tintersect2;
-                }
-                if (tintersect1 >= 0)
-                {
-                    var intersectionPoint = renderPoint + direction*tintersect1;
+                var ambiance = scene.AmbientLight * sphere.DiffuseColor;
 
-                    var surfaceNormal = intersectionPoint - sphereCenter;
-                    surfaceNormal.Normalize();
+                var directionToEye = -direction;
+                directionToEye.Normalize(); //should be anyway?
 
-                    var directionToLight = lightPosition - intersectionPoint;
-                    directionToLight.Normalize();
-
-                    var directionToEye = -direction;
-                    directionToEye.Normalize();//should be anyway?
-
-                    var ambiance = scene.AmbientLight*sphereDiffuseColor;
-                    var ldotn = Clamp01(Vector3D.DotProduct(directionToLight, surfaceNormal));
-                    var diffuse = sphereDiffuseColor * lightIntensity * ldotn;
-                    var H = directionToLight + directionToEye;
-                    H.Normalize();
-                    var ldoth = Clamp01(Vector3D.DotProduct(surfaceNormal, H));
-                    var specular = sphereMaterialSpecularIntensity* Math.Pow(ldoth, sphereMaterialSpecularConstant)*
-                                   lightSpecularColor;
-                    return (ambiance+diffuse+specular).Clamped().ToColor();
-                }
+                var additionalLight = CalculateLighting(directionToEye, sphere, intersectionPoint, light);
+                return (ambiance + additionalLight).Clamped().ToColor();
             }
 
             return scene.DefaultColor;
+        }
+
+        private static LightStrength CalculateLighting(
+            Vector3D directionToEye,
+            Sphere sphere,
+            Vector3D intersectionPoint,
+            Light light)
+        {
+            var surfaceNormal = sphere.NormalAt(intersectionPoint);
+
+            var directionToLight = light.CenterPoint - intersectionPoint;
+            directionToLight.Normalize();
+
+            var ldotn = Clamp01(Vector3D.DotProduct(directionToLight, surfaceNormal));
+            var diffuse = sphere.DiffuseColor*light.Intensity*ldotn;
+            var H = directionToLight + directionToEye;
+            H.Normalize();
+            var ldoth = Clamp01(Vector3D.DotProduct(surfaceNormal, H));
+            var specular = sphere.MaterialSpecularIntensity*Math.Pow(ldoth, sphere.MaterialSpecularConstant)*
+                           light.SpecularColor;
+            var x = diffuse + specular;
+            return x;
         }
     }
 }
