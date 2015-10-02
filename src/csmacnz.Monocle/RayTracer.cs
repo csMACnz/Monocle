@@ -39,7 +39,11 @@ namespace csmacnz.Monocle
         {
             var sphere = new Sphere(new Vector3D(0, 0, 300), 150);
 
-            var light = new Light(new Vector3D(400, 400, 0));
+            var lights = new[]
+            {
+                new Light(new Vector3D(400, 400, 0)),
+                new Light(new Vector3D(-400, -400, 0))
+            };
 
             double? t = sphere.Test(renderPoint, direction);
 
@@ -47,13 +51,16 @@ namespace csmacnz.Monocle
             {
                 var intersectionPoint = renderPoint + direction * t.Value;
 
-                var ambiance = scene.AmbientLight * sphere.DiffuseColor;
+                var lighting = scene.AmbientLight * sphere.DiffuseColor;
 
                 var directionToEye = -direction;
                 directionToEye.Normalize(); //should be anyway?
 
-                var additionalLight = CalculateLighting(directionToEye, sphere, intersectionPoint, light);
-                return (ambiance + additionalLight).Clamped().ToColor();
+                foreach (var light in lights)
+                {
+                    lighting += CalculateLighting(directionToEye, sphere, intersectionPoint, light);
+                }
+                return (lighting).Clamped().ToColor();
             }
 
             return scene.DefaultColor;
