@@ -37,19 +37,31 @@ namespace csmacnz.Monocle
 
         private static Color RenderPoint(Scene scene, Vector3D renderPoint, Vector3D direction)
         {
-            var sphere = new Sphere(new Vector3D(0, 0, 300), 150);
+            var spheres = new[]
+            {
+                new Sphere(new Vector3D(300, 300, 300), 150),
+                new Sphere(new Vector3D(-300, -300, 300), 150),
+                new Sphere(new Vector3D(300, -300, 300), 150),
+                new Sphere(new Vector3D(-300, 300, 300), 150)
+            };
 
             var lights = new[]
             {
+                new Light(new Vector3D(-600, 0, 300)),
                 new Light(new Vector3D(400, 400, 0)),
                 new Light(new Vector3D(-400, -400, 0))
             };
-
-            double? t = sphere.Test(renderPoint, direction);
-
-            if (t.HasValue)
+            var firstHit = spheres
+                .Select(s=>Tuple.Create(s,s.Test(renderPoint, direction)))
+                .Where(h=>h.Item2.HasValue)
+                .OrderBy(h=>h.Item2.Value)
+                .FirstOrDefault();
+            
+            if (firstHit != null && firstHit.Item2.HasValue)
             {
-                var intersectionPoint = renderPoint + direction * t.Value;
+                var sphere = firstHit.Item1;
+                var t = firstHit.Item2.Value;
+                var intersectionPoint = renderPoint + direction * t;
 
                 var lighting = scene.AmbientLight * sphere.DiffuseColor;
 
