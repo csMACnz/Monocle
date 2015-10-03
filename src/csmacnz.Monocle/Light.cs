@@ -7,7 +7,7 @@ namespace csmacnz.Monocle
         public Light(Vector3D centerPoint)
         {
             CenterPoint = centerPoint;
-            Color = new LightStrength(0.8, 0.8, 0.8);
+            Color = new LightStrength(0.5, 0.5, 0.5);
         }
 
         public LightStrength Color { get; set; }

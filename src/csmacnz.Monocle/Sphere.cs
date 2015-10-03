@@ -17,8 +17,8 @@ namespace csmacnz.Monocle
         {
             CenterPoint = center;
             Radius = radius;
-            Shinyness = 100;
-            DiffuseColor = LightStrength.From(Colors.DeepSkyBlue);
+            Shinyness = 500;
+            DiffuseColor = LightStrength.From(Colors.LightSkyBlue);
             SpecularColor = new LightStrength(0.7, 0.7, 0.7);
         }
 

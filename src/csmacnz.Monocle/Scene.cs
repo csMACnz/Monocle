@@ -10,7 +10,7 @@ namespace csmacnz.Monocle
         {
             return new Scene
             {
-                CameraPosition = new Vector3D(0, 0, -1000),
+                CameraPosition = new Vector3D(0, 0, -10.00),
                 CameraFacingAt = new Vector3D(),
                 PixelsToUnits = 1,
                 DefaultColor = Colors.Firebrick,

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Media.Media3D;
 using Color = System.Windows.Media.Color;
-using static csmacnz.Monocle.DoubleHelpers;
 
 namespace csmacnz.Monocle
 {
@@ -18,19 +18,20 @@ namespace csmacnz.Monocle
             {
                 foreach (var x in Enumerable.Range(region.X, region.Width))
                 {
-                    System.Threading.Thread.Sleep(0);
-                    System.Threading.Thread.Sleep(0);
-                    System.Threading.Thread.Sleep(0);
+                    Thread.Sleep(0);
+                    Thread.Sleep(0);
+                    Thread.Sleep(0);
 
                     var point = new Vector3D(((x + 0.5) - (output.Width / 2.0)) * scene.PixelsToUnits, ((y + 0.5) - (output.Height / 2.0)) * scene.PixelsToUnits, 0);
+                    point = point*0.01D;
                     var direction = point - scene.CameraPosition;
                     direction.Normalize();
                     var pixelColor = RenderPoint(scene, point, direction);
                     output.SetPixel(x, y, pixelColor);
 
-                    System.Threading.Thread.Sleep(0);
-                    System.Threading.Thread.Sleep(0);
-                    System.Threading.Thread.Sleep(0);
+                    Thread.Sleep(0);
+                    Thread.Sleep(0);
+                    Thread.Sleep(0);
                 }
             }
         }
@@ -39,18 +40,18 @@ namespace csmacnz.Monocle
         {
             var spheres = new[]
             {
-                new Sphere(new Vector3D(300, 300, 300), 150),
-                new Sphere(new Vector3D(-300, -300, 300), 150),
-                new Sphere(new Vector3D(300, -300, 300), 150),
-                new Sphere(new Vector3D(-300, 300, 300), 150)
+                new Sphere(new Vector3D(3, 3, 3), 1.50),
+                new Sphere(new Vector3D(-3, -3, 3), 1.50),
+                new Sphere(new Vector3D(3, -3, 3), 1.50),
+                new Sphere(new Vector3D(-3, 3, 3), 1.50)
             };
 
             var lights = new[]
             {
-                new Light(new Vector3D(0, 0, 300)),
-                new Light(new Vector3D(-500, 300, 300)),
-                new Light(new Vector3D(400, 400, 0)),
-                new Light(new Vector3D(-400, -400, 0))
+                new Light(new Vector3D(0, 0, 3.00)),
+                new Light(new Vector3D(-6.00, 3.00, 3.00)),
+                //new Light(new Vector3D(4.00, 4.00, 0)),
+                //new Light(new Vector3D(-4.00, -4.00, 0))
             };
             var firstHit = spheres
                 .Select(s=>Tuple.Create(s,s.Test(renderPoint, direction)))
@@ -58,7 +59,7 @@ namespace csmacnz.Monocle
                 .OrderBy(h=>h.Item2.Value)
                 .FirstOrDefault();
 
-            if (firstHit != null && firstHit.Item2.HasValue)
+            if (firstHit?.Item2 != null)
             {
                 var sphere = firstHit.Item1;
                 var t = firstHit.Item2.Value;
@@ -69,11 +70,13 @@ namespace csmacnz.Monocle
                 var directionToEye = -direction;
                 directionToEye.Normalize(); //should be anyway?
 
+                LightStrength additionalLighting = LightStrength.Zero;
                 foreach (var light in lights)
                 {
-                    lighting += CalculateLighting(spheres, directionToEye, sphere, intersectionPoint, light);
+                    additionalLighting += CalculateLighting(spheres, directionToEye, sphere, intersectionPoint, light);
                 }
-                return (lighting).Clamped().ToColor();
+                return (lighting+ additionalLighting*sphere.DiffuseColor).Clamped().ToColor();
+
             }
 
             return scene.DefaultColor;
@@ -84,7 +87,7 @@ namespace csmacnz.Monocle
             var directionToLight = light.CenterPoint - intersectionPoint;
             directionToLight.Normalize();
             var lightT = (light.CenterPoint.X - intersectionPoint.X)/directionToLight.X;
-            var blocked = spheres.Any(s => s != sphere && ObscuresLight(s, intersectionPoint, directionToLight, lightT));
+            var blocked = spheres.Any(s => ObscuresLight(s, intersectionPoint, directionToLight, lightT));
             if (blocked)
             {
                 return LightStrength.Zero;
@@ -92,11 +95,11 @@ namespace csmacnz.Monocle
 
             var surfaceNormal = sphere.NormalAt(intersectionPoint);
 
-            var ldotn = Clamp01(Vector3D.DotProduct(directionToLight, surfaceNormal));
-            var diffuse = sphere.DiffuseColor*light.Color*ldotn;
+            var ldotn = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, directionToLight));
+            var diffuse = light.Color*ldotn;
             var H = directionToLight + directionToEye;
             H.Normalize();
-            var ndoth = Clamp01(Vector3D.DotProduct(surfaceNormal, H));
+            var ndoth = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, H));
             var specular = sphere.SpecularColor*Math.Pow(ndoth, sphere.Shinyness);
             var x = diffuse + specular;
             return x.Clamped();
@@ -104,8 +107,8 @@ namespace csmacnz.Monocle
 
         private static bool ObscuresLight(Sphere s, Vector3D intersectionPoint, Vector3D directionToLight, double lightT)
         {
-            var test = s.Test(intersectionPoint, directionToLight);
-            return test.HasValue && test <= lightT;
+            var test = s.Test(intersectionPoint+(directionToLight*0.001), directionToLight);
+            return test.HasValue && test > 0 && test <= lightT;
         }
     }
 }
