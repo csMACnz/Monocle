@@ -56,24 +56,25 @@ namespace csmacnz.Monocle
                 var t = firstHit.Item2.Value;
                 var intersectionPoint = renderPoint + direction * t;
 
-                var lighting = scene.AmbientLight * sphere.DiffuseColor;
-
                 var directionToEye = -direction;
                 directionToEye.Normalize(); //should be anyway?
 
                 LightStrength additionalLighting = LightStrength.Zero;
+                double specular = 0.0;
                 foreach (var light in scene.Lights)
                 {
-                    additionalLighting += CalculateLighting(scene.Spheres, directionToEye, sphere, intersectionPoint, light);
+                    var lighting = CalculateLighting(scene.Spheres, directionToEye, sphere, intersectionPoint, light);
+                    additionalLighting += lighting.Item1;
+                    specular += lighting.Item2;
                 }
-                return (lighting+ additionalLighting*sphere.DiffuseColor).Clamped().ToColor();
+                return (((scene.AmbientLight+ additionalLighting).Clamped() * sphere.DiffuseColor)+(Math.Min(1.0,specular)*sphere.SpecularColor)).ToColor();
 
             }
 
             return scene.DefaultColor;
         }
 
-        private static LightStrength CalculateLighting(Sphere[] spheres, Vector3D directionToEye, Sphere sphere, Vector3D intersectionPoint, Light light)
+        private static Tuple<LightStrength, double> CalculateLighting(Sphere[] spheres, Vector3D directionToEye, Sphere sphere, Vector3D intersectionPoint, Light light)
         {
             var directionToLight = light.CenterPoint - intersectionPoint;
             directionToLight.Normalize();
@@ -81,7 +82,7 @@ namespace csmacnz.Monocle
             var blocked = spheres.Any(s => ObscuresLight(s, intersectionPoint, directionToLight, lightT));
             if (blocked)
             {
-                return LightStrength.Zero;
+                return Tuple.Create(LightStrength.Zero,0.0);
             }
 
             var surfaceNormal = sphere.NormalAt(intersectionPoint);
@@ -91,9 +92,8 @@ namespace csmacnz.Monocle
             var H = directionToLight + directionToEye;
             H.Normalize();
             var ndoth = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, H));
-            var specular = sphere.SpecularColor*Math.Pow(ndoth, sphere.Shinyness);
-            var x = diffuse + specular;
-            return x.Clamped();
+            var specular = Math.Pow(ndoth, sphere.Shinyness);
+            return Tuple.Create(diffuse, specular);
         }
 
         private static bool ObscuresLight(Sphere s, Vector3D intersectionPoint, Vector3D directionToLight, double lightT)
