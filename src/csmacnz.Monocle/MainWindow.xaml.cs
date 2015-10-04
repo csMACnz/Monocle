@@ -164,6 +164,8 @@ namespace csmacnz.Monocle
         {
             //int width = 640, height = 480;
             int width = 1024, height = 768;
+            //int width = 1920, height = 1080;
+
             SceneOutput output = new SceneOutput(width, height);
 
             Action updateScreen = () =>
@@ -181,8 +183,16 @@ namespace csmacnz.Monocle
                 {
                     var horizontalSectionCount = 16;
                     var verticalSectionCount = 16;
-                    var sectionWidth = width / horizontalSectionCount;
-                    var sectionHeight = height / verticalSectionCount;
+                    int sectionWidth = width / horizontalSectionCount;
+                    if (sectionWidth*horizontalSectionCount < width)
+                    {
+                        sectionWidth +=1;
+                    }
+                    int sectionHeight = height / verticalSectionCount;
+                    if (sectionHeight * verticalSectionCount < height)
+                    {
+                        sectionHeight += 1;
+                    }
                     List<RenderTask> taskQueue = new List<RenderTask>();
 
                     foreach (var y in Enumerable.Range(0, verticalSectionCount))
@@ -194,7 +204,8 @@ namespace csmacnz.Monocle
                                 y *sectionHeight,
                                 sectionWidth,
                                 sectionHeight);
-
+                            if (region.X + region.Width > width) region.Width = width - region.X;
+                            if (region.Y + region.Height> height) region.Height = height- region.Y;
                             taskQueue.Add(new RenderTask {Region = region});
                         }
                     }

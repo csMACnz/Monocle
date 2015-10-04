@@ -11,7 +11,7 @@ namespace csmacnz.Monocle
             {
                 CameraPosition = new Vector3D(0, 0, -10.00),
                 CameraFacingAt = new Vector3D(),
-                PixelsToUnits = 1,
+                ViewPortHeight = 8,
                 DefaultColor = Colors.Firebrick,
                 AmbientLight = new LightStrength(0.1, 0.1, 0.1),
                 Spheres = new[]
@@ -26,8 +26,8 @@ namespace csmacnz.Monocle
                 {
                     new Light(new Vector3D(0, 0, 3.00), new LightStrength(0.5, 0.5, 0.5)),
                     new Light(new Vector3D(-6.00, 3.00, 3.00), new LightStrength(0.5, 0.5, 0.5)),
-                    new Light(new Vector3D(4.00, 4.00, 0), new LightStrength(0.5, 0.5, 0.5)),
-                    new Light(new Vector3D(-4.00, -4.00, 0), new LightStrength(0.5, 0.5, 0.5))
+                    new Light(new Vector3D(4.00, 4.00, -5), new LightStrength(0.5, 0.5, 0.5)),
+                    new Light(new Vector3D(-4.00, -4.00, -5), new LightStrength(0.5, 0.5, 0.5))
                 }
             };
         }
@@ -42,7 +42,8 @@ namespace csmacnz.Monocle
 
         public Vector3D CameraPosition { get; set; }
 
-        public double PixelsToUnits { get; set; }
         public Color DefaultColor { get; set; }
+
+        public double ViewPortHeight { get; set; }
     }
 }

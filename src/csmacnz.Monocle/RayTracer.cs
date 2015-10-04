@@ -14,6 +14,11 @@ namespace csmacnz.Monocle
             Vector3D directionUnit = (scene.CameraFacingAt - scene.CameraPosition);
             directionUnit.Normalize();
 
+            var pixelHeight = scene.ViewPortHeight / output.Height;
+            var pixelWidth = pixelHeight;
+            var halfWidth = (output.Width / 2.0);
+            var halfHeight = (output.Height / 2.0);
+
             foreach (var y in Enumerable.Range(region.Y, region.Height))
             {
                 foreach (var x in Enumerable.Range(region.X, region.Width))
@@ -22,8 +27,9 @@ namespace csmacnz.Monocle
                     Thread.Sleep(0);
                     Thread.Sleep(0);
 
-                    var point = new Vector3D(((x + 0.5) - (output.Width / 2.0)) * scene.PixelsToUnits, ((y + 0.5) - (output.Height / 2.0)) * scene.PixelsToUnits, 0);
-                    point = point*0.01D;
+                    var point = new Vector3D(
+                        ((x + 0.5) - halfWidth)*pixelWidth,
+                        ((y + 0.5) - halfHeight)*pixelHeight, 0);
                     var direction = point - scene.CameraPosition;
                     direction.Normalize();
                     var pixelColor = RenderPoint(scene, point, direction);
