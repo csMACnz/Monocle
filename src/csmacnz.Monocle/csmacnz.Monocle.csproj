@@ -53,6 +53,7 @@
     <Compile Include="Light.cs" />
     <Compile Include="LightStrength.cs" />
     <Compile Include="Material.cs" />
+    <Compile Include="Plane.cs" />
     <Compile Include="RayTracer.cs" />
     <Compile Include="RenderTask.cs" />
     <Compile Include="Scene.cs" />
