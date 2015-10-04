@@ -1,25 +1,18 @@
 ﻿using System;
-using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace csmacnz.Monocle
 {
-    public class Sphere
+    public class Sphere : IGeometry
     {
         public Vector3D CenterPoint { get; set; }
-        public LightStrength DiffuseColor { get; set; }
-        public LightStrength SpecularColor { get; set; }
-
-        public int Shinyness { get; set; }
         public double Radius { get; set; }
-
-        public Sphere(Vector3D center, double radius)
+        public Material Material { get; set; }
+        public Sphere(Vector3D center, double radius, Material material)
         {
             CenterPoint = center;
             Radius = radius;
-            Shinyness = 500;
-            DiffuseColor = LightStrength.From(Colors.LightSkyBlue);
-            SpecularColor = new LightStrength(0.7, 0.7, 0.7);
+            Material=material;
         }
 
         public Vector3D NormalAt(Vector3D intersectionPoint)

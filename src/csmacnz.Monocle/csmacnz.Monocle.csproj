@@ -49,8 +49,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="DoubleHelpers.cs" />
+    <Compile Include="IGeometry.cs" />
     <Compile Include="Light.cs" />
     <Compile Include="LightStrength.cs" />
+    <Compile Include="Material.cs" />
     <Compile Include="RayTracer.cs" />
     <Compile Include="RenderTask.cs" />
     <Compile Include="Scene.cs" />

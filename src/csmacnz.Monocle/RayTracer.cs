@@ -30,8 +30,10 @@ namespace csmacnz.Monocle
                     var point = new Vector3D(
                         ((x + 0.5) - halfWidth)*pixelWidth,
                         ((y + 0.5) - halfHeight)*pixelHeight, 0);
+
                     var direction = point - scene.CameraPosition;
                     direction.Normalize();
+
                     var pixelColor = RenderPoint(scene, point, direction);
                     output.SetPixel(x, y, pixelColor);
 
@@ -44,7 +46,7 @@ namespace csmacnz.Monocle
 
         private static Color RenderPoint(Scene scene, Vector3D renderPoint, Vector3D direction)
         {
-            var firstHit = scene.Spheres
+            var firstHit = scene.Objects
                 .Select(s=>Tuple.Create(s,s.Test(renderPoint, direction)))
                 .Where(h=>h.Item2.HasValue)
                 .OrderBy(h=>h.Item2.Value)
@@ -59,22 +61,34 @@ namespace csmacnz.Monocle
                 var directionToEye = -direction;
                 directionToEye.Normalize(); //should be anyway?
 
-                LightStrength additionalLighting = LightStrength.Zero;
-                double specular = 0.0;
-                foreach (var light in scene.Lights)
-                {
-                    var lighting = CalculateLighting(scene.Spheres, directionToEye, sphere, intersectionPoint, light);
-                    additionalLighting += lighting.Item1;
-                    specular += lighting.Item2;
-                }
-                return (((scene.AmbientLight+ additionalLighting).Clamped() * sphere.DiffuseColor)+(Math.Min(1.0,specular)*sphere.SpecularColor)).ToColor();
 
+                var material = sphere.Material;
+                var surfaceNormal = sphere.NormalAt(intersectionPoint);
+
+                return CalculateColor(scene, directionToEye, surfaceNormal, material, intersectionPoint);
             }
 
             return scene.DefaultColor;
         }
 
-        private static Tuple<LightStrength, double> CalculateLighting(Sphere[] spheres, Vector3D directionToEye, Sphere sphere, Vector3D intersectionPoint, Light light)
+        private static Color CalculateColor(Scene scene, Vector3D directionToEye, Vector3D surfaceNormal, Material material,
+            Vector3D intersectionPoint)
+        {
+            double specular = 0.0;
+            LightStrength additionalLighting = LightStrength.Zero;
+            foreach (var light in scene.Lights)
+            {
+                var lighting = CalculateLighting(scene.Objects, directionToEye, surfaceNormal, material, intersectionPoint,
+                    light);
+                additionalLighting += lighting.Item1;
+                specular += lighting.Item2;
+            }
+            var litColor = ((scene.AmbientLight + additionalLighting).Clamped()*material.DiffuseColor);
+            var totalSpecular = (Math.Min(1.0, specular)*material.SpecularColor);
+            return (litColor + totalSpecular).ToColor();
+        }
+
+        private static Tuple<LightStrength, double> CalculateLighting(IGeometry[] spheres, Vector3D directionToEye, Vector3D surfaceNormal, Material sphere, Vector3D intersectionPoint, Light light)
         {
             var directionToLight = light.CenterPoint - intersectionPoint;
             directionToLight.Normalize();
@@ -85,8 +99,6 @@ namespace csmacnz.Monocle
                 return Tuple.Create(LightStrength.Zero,0.0);
             }
 
-            var surfaceNormal = sphere.NormalAt(intersectionPoint);
-
             var ldotn = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, directionToLight));
             var diffuse = light.Brightness*ldotn;
             var H = directionToLight + directionToEye;
@@ -96,7 +108,7 @@ namespace csmacnz.Monocle
             return Tuple.Create(diffuse, specular);
         }
 
-        private static bool ObscuresLight(Sphere s, Vector3D intersectionPoint, Vector3D directionToLight, double lightT)
+        private static bool ObscuresLight(IGeometry s, Vector3D intersectionPoint, Vector3D directionToLight, double lightT)
         {
             var test = s.Test(intersectionPoint+(directionToLight*0.001), directionToLight);
             return test.HasValue && test > 0 && test <= lightT;

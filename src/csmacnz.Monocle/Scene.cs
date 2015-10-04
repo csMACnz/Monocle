@@ -7,6 +7,13 @@ namespace csmacnz.Monocle
     {
         public static Scene Default()
         {
+            var blueMaterial = new Material
+            {
+                Shinyness = 500,
+                DiffuseColor = LightStrength.From(Colors.LightSkyBlue),
+                SpecularColor = new LightStrength(0.7, 0.7, 0.7)
+            };
+
             return new Scene
             {
                 CameraPosition = new Vector3D(0, 0, -10.00),
@@ -14,12 +21,12 @@ namespace csmacnz.Monocle
                 ViewPortHeight = 8,
                 DefaultColor = Colors.Firebrick,
                 AmbientLight = new LightStrength(0.1, 0.1, 0.1),
-                Spheres = new[]
+                Objects = new[]
                 {
-                    new Sphere(new Vector3D(3, 3, 3), 1.50),
-                    new Sphere(new Vector3D(-3, -3, 3), 1.50),
-                    new Sphere(new Vector3D(3, -3, 3), 1.50),
-                    new Sphere(new Vector3D(-3, 3, 3), 1.50)
+                    new Sphere(new Vector3D(3, 3, 3), 1.50, blueMaterial),
+                    new Sphere(new Vector3D(-3, -3, 3), 1.50, blueMaterial),
+                    new Sphere(new Vector3D(3, -3, 3), 1.50, blueMaterial),
+                    new Sphere(new Vector3D(-3, 3, 3), 1.50, blueMaterial)
                 },
 
                 Lights = new[]
@@ -34,7 +41,7 @@ namespace csmacnz.Monocle
 
         public Light[] Lights { get; set; }
 
-        public Sphere[] Spheres { get; set; }
+        public IGeometry[] Objects { get; set; }
 
         public LightStrength AmbientLight { get; set; }
 
