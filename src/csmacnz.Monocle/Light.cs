@@ -4,13 +4,13 @@ namespace csmacnz.Monocle
 {
     public class Light
     {
-        public Light(Vector3D centerPoint)
+        public Light(Vector3D centerPoint, LightStrength brightness)
         {
             CenterPoint = centerPoint;
-            Color = new LightStrength(0.5, 0.5, 0.5);
+            Brightness = brightness;
         }
 
-        public LightStrength Color { get; set; }
+        public LightStrength Brightness { get; set; }
 
         public Vector3D CenterPoint { get; set; }
     }

@@ -38,22 +38,7 @@ namespace csmacnz.Monocle
 
         private static Color RenderPoint(Scene scene, Vector3D renderPoint, Vector3D direction)
         {
-            var spheres = new[]
-            {
-                new Sphere(new Vector3D(3, 3, 3), 1.50),
-                new Sphere(new Vector3D(-3, -3, 3), 1.50),
-                new Sphere(new Vector3D(3, -3, 3), 1.50),
-                new Sphere(new Vector3D(-3, 3, 3), 1.50)
-            };
-
-            var lights = new[]
-            {
-                new Light(new Vector3D(0, 0, 3.00)),
-                new Light(new Vector3D(-6.00, 3.00, 3.00)),
-                //new Light(new Vector3D(4.00, 4.00, 0)),
-                //new Light(new Vector3D(-4.00, -4.00, 0))
-            };
-            var firstHit = spheres
+            var firstHit = scene.Spheres
                 .Select(s=>Tuple.Create(s,s.Test(renderPoint, direction)))
                 .Where(h=>h.Item2.HasValue)
                 .OrderBy(h=>h.Item2.Value)
@@ -71,9 +56,9 @@ namespace csmacnz.Monocle
                 directionToEye.Normalize(); //should be anyway?
 
                 LightStrength additionalLighting = LightStrength.Zero;
-                foreach (var light in lights)
+                foreach (var light in scene.Lights)
                 {
-                    additionalLighting += CalculateLighting(spheres, directionToEye, sphere, intersectionPoint, light);
+                    additionalLighting += CalculateLighting(scene.Spheres, directionToEye, sphere, intersectionPoint, light);
                 }
                 return (lighting+ additionalLighting*sphere.DiffuseColor).Clamped().ToColor();
 
@@ -96,7 +81,7 @@ namespace csmacnz.Monocle
             var surfaceNormal = sphere.NormalAt(intersectionPoint);
 
             var ldotn = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, directionToLight));
-            var diffuse = light.Color*ldotn;
+            var diffuse = light.Brightness*ldotn;
             var H = directionToLight + directionToEye;
             H.Normalize();
             var ndoth = Math.Max(0.0,Vector3D.DotProduct(surfaceNormal, H));
